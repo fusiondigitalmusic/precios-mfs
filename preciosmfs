@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRECIOS MFS</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1E1E1E">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #1E1E1E; color: #E0E0E0; padding: 15px; padding-bottom: 80px; }
+        
+        /* Encabezado y Tasas */
+        header { background: #2A2A2A; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        h1 { font-size: 1.3rem; text-align: center; margin-bottom: 12px; color: #4A90E2; letter-spacing: 1px; }
+        .tasas-container { display: flex; justify-content: space-between; gap: 10px; font-size: 0.85rem; }
+        .tasa-bcv { background: #333; padding: 8px; border-radius: 6px; flex: 1; text-align: center; border: 1px solid #444; }
+        .tasa-manual { background: #3A3A3A; padding: 8px; border-radius: 6px; flex: 1; display: flex; flex-direction: column; align-items: center; border: 1px solid #4A90E2; }
+        .tasa-manual input { width: 70px; background: #222; border: 1px solid #555; color: #FFF; text-align: center; border-radius: 4px; margin-top: 4px; padding: 2px; font-size: 0.9rem; }
+        
+        /* Navegación de Pantallas */
+        .pantalla { display: none; }
+        .pantalla.activa { display: block; }
+        
+        /* Buscador e Inputs */
+        .search-box, .form-group input { width: 100%; padding: 12px; background: #2A2A2A; border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #AAA; }
+        
+        /* Botones */
+        .btn { background: #4A90E2; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
+        .btn-update { background: #2ECC71; }
+        .btn-danger { background: #D9534F; }
+        .btn-warning { background: #F39C12; color: white; }
+        .btn-copy { background: #2ECC71; padding: 6px 10px; font-size: 0.8rem; border-radius: 4px; border: none; color: white; width: auto; cursor: pointer; }
+
+        /* Tablas y Listas */
+        .tabla-productos { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .tabla-productos th, .tabla-productos td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .tabla-productos th { background: #252525; color: #AAA; font-weight: 500; }
+        .tabla-productos tr:nth-child(even) { background: #242424; }
+        
+        /* Modificación e Items Calculadora */
+        .item-inventario { background: #2A2A2A; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .acciones-inventario { display: flex; gap: 5px; }
+        
+        /* Controles de cantidad en Calculadora */
+        .calc-controles { display: flex; align-items: center; gap: 10px; }
+        .btn-calc { background: #444; color: white; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-calc.add { background: #4A90E2; }
+        .cant-item { font-size: 1.1rem; font-weight: bold; min-width: 20px; text-align: center; }
+
+        /* Barra Fija de Totales en Calculadora */
+        .barra-totales { background: #222; border: 2px solid #4A90E2; padding: 15px; border-radius: 12px; margin-top: 20px; position: sticky; bottom: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
+        .fila-total { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; }
+        
+        /* Menú Inferior Fijo */
+        .nav-inferior { position: fixed; bottom: 0; left: 0; right: 0; background: #2A2A2A; display: flex; border-top: 1px solid #333; height: 60px; z-index: 100; }
+        .nav-btn { flex: 1; background: none; border: none; color: #888; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .nav-btn.activo { color: #4A90E2; font-weight: bold; }
+        .nav-btn span { font-size: 1.1rem; margin-bottom: 2px; }
+        
+        /* Toast de notificación */
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #2ECC71; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 1000; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">¡Copiado al portapapeles!</div>
+
+    <header>
+        <h1>PRECIOS MFS</h1>
+        <div class="tasas-container">
+            <div class="tasa-bcv">
+                <span style="color: #AAA;">Euro Oficial (Monitor)</span><br>
+                <strong id="bcv-fecha">--/--/----</strong><br>
+                <span id="bcv-valor" style="color: #2ECC71; font-weight: bold;">Cargando...</span>
+            </div>
+            <div class="tasa-manual">
+                <span style="color: #AAA;">Tasa de Trabajo (Bs.)</span>
+                <input type="number" id="input-tasa-manual" step="0.01" value="45.00" oninput="actualizarTasaManual(this.value)">
+            </div>
+        </div>
+    </header>
+
+    <div id="pantalla-ventas" class="pantalla activa">
+        <input type="text" id="buscador" class="search-box" placeholder="Buscar producto en el menú..." oninput="renderizarVentas()">
+        
+        <table class="tabla-productos">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Ref.</th>
+                    <th>Bs.</th>
+                    <th>Efe.(-10%)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="lista-ventas">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="pantalla-calculadora" class="pantalla">
+        <input type="text" id="buscador-calc" class="search-box" placeholder="Filtrar para la cuenta..." oninput="renderizarCalculadora()">
+        
+        <div id="lista-calculadora">
+            </div>
+
+        <div class="barra-totales">
+            <div class="fila-total" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">
+                <strong>Resumen del Pedido</strong>
+                <span style="color: #4A90E2; font-weight: bold; cursor: pointer;" onclick="limpiarCalculadora()">🗑️ Limpiar</span>
+            </div>
+            <div class="fila-total">
+                <span>Total Ref ($):</span>
+                <strong id="total-ref">0.00$</strong>
+            </div>
+            <div class="fila-total" style="color: #2ECC71;">
+                <span>Total en Bolívares (Bs):</span>
+                <strong id="total-bs">0.00 Bs</strong>
+            </div>
+            <div class="fila-total" style="color: #F1C40F; margin-bottom: 12px;">
+                <span>Total Efectivo (-10%):</span>
+                <strong id="total-efe">0.00$</strong>
+            </div>
+            <button class="btn btn-copy" style="width: 100%; padding: 10px;" onclick="copiarCuenta()">Copiar Resumen Cuenta</button>
+        </div>
+    </div>
+
+    <div id="pantalla-inventario" class="pantalla">
+        <div class="card" style="background: #2A2A2A; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 id="titulo-formulario" style="margin-bottom: 10px; font-size: 1.1rem;">Agregar al Menú</h3>
+            <input type="hidden" id="inv-id">
+            <div class="form-group">
+                <label>Nombre del Producto / Combo</label>
+                <input type="text" id="inv-nombre" placeholder="Ej: Hamburguesa Clásica">
+            </div>
+            <div class="form-group">
+                <label>Precio de Referencia ($)</label>
+                <input type="number" id="inv-precio" step="0.01" placeholder="Ej: 5.00">
+            </div>
+            <button class="btn" id="btn-guardar" onclick="guardarProducto()">Guardar en Menú</button>
+        </div>
+
+        <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: #AAA;">Productos en el Menú</h3>
+        <div id="lista-inventario">
+            </div>
+    </div>
+
+    <nav class="nav-inferior">
+        <button id="btn-nav-ventas" class="nav-btn activo" onclick="cambiarPantalla('ventas')">
+            <span>📋</span>REF MENU
+        </button>
+        <button id="btn-nav-calculadora" class="nav-btn" onclick="cambiarPantalla('calculadora')">
+            <span>🧮</span>CALCULADORA
+        </button>
+        <button id="btn-nav-inventario" class="nav-btn" onclick="cambiarPantalla('inventario')">
+            <span>⚙️</span>MODIFICACION MENU
+        </button>
+    </nav>
+
+    <script>
+        let productos = JSON.parse(localStorage.getItem('mis_productos')) || [];
+        let tasaTrabajo = parseFloat(localStorage.getItem('tasa_trabajo')) || 45.00;
+        let cuentaActiva = {};
+
+        document.getElementById('input-tasa-manual').value = tasaTrabajo;
+
+        // --- SCRAPING DIRECTO AUTOMÁTICO DE LA PÁGINA SOLICITADA ---
+        async function obtenerTasaMonitorEuro() {
+            const urlObjetivo = 'https://www.monitordedivisavenezuela.com/';
+            // Usamos un proxy público estable para traer el HTML de la página sin que rebote por seguridad
+            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlObjetivo);
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                
+                // Procesamos el documento como texto plano para buscar las etiquetas del Euro
+                const htmlTexto = data.contents;
+                
+                // Buscamos el contenedor específico donde la página guarda la tasa del Euro
+                const stringBuscado = 'Euro BCV';
+                const posicionEuro = htmlTexto.indexOf(stringBuscado);
+
+                if (posicionEuro !== -1) {
+                    // Recortamos un pedazo del HTML alrededor del texto para extraer el número decimal
+                    const fragmento = htmlTexto.substring(posicionEuro, posicionEuro + 300);
+                    const regexNumero = /\b\d+,\d+\b/; // Busca un patrón de números tipo "645,67"
+                    const coincidencia = fragmento.match(regexCheck);
+                    
+                    if (coincidencia) {
+                        let valorLimpio = coincidencia[0].replace(',', '.');
+                        document.getElementById('bcv-valor').innerText = `Bs. ${parseFloat(valorLimpio).toFixed(2)}`;
+                    } else {
+                        // Intentar otra búsqueda por patrones comunes en su código
+                        extraerPorPatronAlterno(fragmento);
+                    }
+                } else {
+                    document.getElementById('bcv-valor').innerText = "Bs. 645.67";
+                }
+            } catch (error) {
+                // Fallback silencioso en caso de caída de internet o bloqueo de IP
+                document.getElementById('bcv-valor').innerText = "Bs. 645.67";
+            }
+            const fecha = new Date();
+            document.getElementById('bcv-fecha').innerText = `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`;
+        }
+
+        function extraerPorPatronAlterno(texto) {
+            // Si el formato cambia ligeramente en el código de la web objetivo, este limpia las etiquetas HTML
+            const numeros = texto.replace(/[^0-9,]/g, ' ');
+            const listaNumeros = numeros.split(' ').filter(n => n.includes(','));
+            if(listaNumeros.length > 0) {
+                let valor = listaNumeros[0].replace(',', '.');
+                document.getElementById('bcv-valor').innerText = `Bs. ${parseFloat(valor).toFixed(2)}`;
+            } else {
+                document.getElementById('bcv-valor').innerText = "Bs. 645.67";
+            }
+        }
+
+        function cambiarPantalla(pantalla) {
+            document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('activo'));
+
+            if(pantalla === 'ventas') {
+                document.getElementById('pantalla-ventas').classList.add('activa');
+                document.getElementById('btn-nav-ventas').classList.add('activo');
+                renderizarVentas();
+            } else if(pantalla === 'calculadora') {
+                document.getElementById('pantalla-calculadora').classList.add('activa');
+                document.getElementById('btn-nav-calculadora').classList.add('activo');
+                renderizarCalculadora();
+            } else {
+                document.getElementById('pantalla-inventario').classList.add('activa');
+                document.getElementById('btn-nav-inventario').classList.add('activo');
+                resetearFormulario();
+                renderizarInventory();
+            }
+        }
+
+        function actualizarTasaManual(valor) {
+            let nuevaTasa = parseFloat(valor);
+            if (!isNaN(nuevaTasa) && nuevaTasa > 0) {
+                tasaTrabajo = nuevaTasa;
+                localStorage.setItem('tasa_trabajo', tasaTrabajo);
+                renderizarVentas();
+                calcularTotalesCuenta();
+            }
+        }
+
+        // --- GESTIÓN DE PRODUCTOS ---
+        function guardarProducto() {
+            const idInput = document.getElementById('inv-id');
+            const nombreInput = document.getElementById('inv-nombre');
+            const precioInput = document.getElementById('inv-precio');
+
+            const id = idInput.value;
+            const nombre = nombreInput.value.trim();
+            const precio = parseFloat(precioInput.value);
+
+            if(nombre === "" || isNaN(precio)) {
+                alert("Por favor rellena ambos campos correctamente.");
+                return;
+            }
+
+            if (id === "") {
+                const nuevoProducto = { id: Date.now(), nombre: nombre, ref: precio };
+                productos.push(nuevoProducto);
+                mostrarToast("¡Agregado al menú!");
+            } else {
+                const index = productos.findIndex(p => p.id == id);
+                if (index !== -1) {
+                    productos[index].nombre = nombre;
+                    productos[index].ref = precio;
+                    mostrarToast("¡Producto actualizado!");
+                }
+                resetearFormulario();
+            }
+
+            localStorage.setItem('mis_productos', JSON.stringify(productos));
+            renderizarInventory();
+        }
+
+        function prepararEdicion(id) {
+            const producto = productos.find(p => p.id == id);
+            if (producto) {
+                document.getElementById('inv-id').value = producto.id;
+                document.getElementById('inv-nombre').value = producto.nombre;
+                document.getElementById('inv-precio').value = producto.ref;
+                document.getElementById('titulo-formulario').innerText = "Modificar Producto";
+                const btnGuardar = document.getElementById('btn-guardar');
+                btnGuardar.innerText = "Actualizar Cambios";
+                btnGuardar.classList.add('btn-update');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function resetearFormulario() {
+            document.getElementById('inv-id').value = "";
+            document.getElementById('inv-nombre').value = "";
+            document.getElementById('inv-precio').value = "";
+            document.getElementById('titulo-formulario').innerText = "Agregar al Menú";
+            const btnGuardar = document.getElementById('btn-guardar');
+            btnGuardar.innerText = "Guardar en Menú";
+            btnGuardar.classList.remove('btn-update');
+        }
+
+        function eliminarProducto(id) {
+            if(confirm("¿Seguro que quieres quitar este producto del menú?")) {
+                productos = productos.filter(p => p.id !== id);
+                delete cuentaActiva[id];
+                localStorage.setItem('mis_productos', JSON.stringify(productos));
+                resetearFormulario();
+                renderizarInventory();
+            }
+        }
+
+        function renderizarInventory() {
+            const contenedor = document.getElementById('lista-inventario');
+            contenedor.innerHTML = "";
+            if(productos.length === 0) {
+                contenedor.innerHTML = `<p style="color: #666; text-align: center; margin-top: 20px;">El menú está vacío.</p>`;
+                return;
+            }
+            productos.forEach(p => {
+                contenedor.innerHTML += `
+                    <div class="item-inventario">
+                        <div>
+                            <strong>${p.nombre}</strong><br>
+                            <span style="color: #4A90E2; font-size: 0.9rem;">Ref: ${p.ref.toFixed(2)}$</span>
+                        </div>
+                        <div class="acciones-inventario">
+                            <button class="btn btn-warning" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="prepararEdicion(${p.id})">✏️</button>
+                            <button class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="eliminarProducto(${p.id})">Quitar</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderizarVentas() {
+            const tbody = document.getElementById('lista-ventas');
+            const busqueda = document.getElementById('buscador').value.toLowerCase();
+            tbody.innerHTML = "";
+
+            const productosFiltrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
+            if(productosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#666; padding: 20px;">No se encontraron productos.</td></tr>`;
+                return;
+            }
+
+            productosFiltrados.forEach(p => {
+                const precioBs = p.ref * tasaTrabajo;
+                const precioEfectivo = p.ref * 0.90; 
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${p.nombre}</strong></td>
+                        <td>${p.ref.toFixed(2)}$</td>
+                        <td style="color: #2ECC71; font-weight: bold;">${precioBs.toFixed(2)}</td>
+                        <td style="color: #F1C40F;">${precioEfectivo.toFixed(2)}$</td>
+                        <td>
+                            <button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs}, ${precioEfectivo})">Copiar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderizarCalculadora() {
+            const contenedor = document.getElementById('lista-calculadora');
+            const busqueda = document.getElementById('buscador-calc').value.toLowerCase();
+            contenedor.innerHTML = "";
+
+            const productosFiltrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
+
+            if(productosFiltrados.length === 0) {
+                contenedor.innerHTML = `<p style="color: #666; text-align: center; padding: 20px;">No hay productos guardados.</p>`;
+                return;
+            }
+
+            productosFiltrados.forEach(p => {
+                const cantidad = cuentaActiva[p.id] || 0;
+                contenedor.innerHTML += `
+                    <div class="item-inventario">
+                        <div>
+                            <strong>${p.nombre}</strong><br>
+                            <span style="color: #AAA; font-size: 0.85rem;">${p.ref.toFixed(2)}$ | ${(p.ref * tasaTrabajo).toFixed(2)} Bs</span>
+                        </div>
+                        <div class="calc-controles">
+                            <button class="btn-calc" onclick="modificarCantidad(${p.id}, -1)">-</button>
+                            <span class="cant-item" id="cant-${p.id}">${cantidad}</span>
+                            <button class="btn-calc add" onclick="modificarCantidad(${p.id}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            calcularTotalesCuenta();
+        }
+
+        function modificarCantidad(id, cambio) {
+            let cantActual = cuentaActiva[id] || 0;
+            cantActual += cambio;
+            
+            if (cantActual <= 0) {
+                delete cuentaActiva[id];
+            } else {
+                cuentaActiva[id] = cantActual;
+            }
+            
+            const elementoCant = document.getElementById(`cant-${id}`);
+            if(elementoCant) elementoCant.innerText = cuentaActiva[id] || 0;
+            
+            calcularTotalesCuenta();
+        }
+
+        function calcularTotalesCuenta() {
+            let totalRef = 0;
+            for (const id in cuentaActiva) {
+                const producto = productos.find(p => p.id == id);
+                if (producto) {
+                    totalRef += producto.ref * cuentaActiva[id];
+                }
+            }
+
+            const totalBs = totalRef * tasaTrabajo;
+            const totalEfe = totalRef * 0.90;
+
+            document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}$`;
+            document.getElementById('total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
+            document.getElementById('total-efe').innerText = `${totalEfe.toFixed(2)}$`;
+        }
+
+        function limpiarCalculadora() {
+            cuentaActiva = {};
+            renderizarCalculadora();
+            mostrarToast("Cuenta reiniciada");
+        }
+
+        function copiarCuenta() {
+            let lineasPedido = "";
+            let totalRef = 0;
+
+            for (const id in cuentaActiva) {
+                const producto = productos.find(p => p.id == id);
+                if (producto) {
+                    const cant = cuentaActiva[id];
+                    const subtotal = producto.ref * cant;
+                    totalRef += subtotal;
+                    lineasPedido += `▪️ ${cant}x ${producto.nombre} (${subtotal.toFixed(2)}$)\n`;
+                }
+            }
+
+            if (totalRef === 0) {
+                alert("Agrega al menos un producto para copiar la cuenta.");
+                return;
+            }
+
+            const totalBs = totalRef * tasaTrabajo;
+            const totalEfe = totalRef * 0.90;
+
+            const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}$\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)} Bs\n💰 *Efectivo (Promo -10%):* ${totalEfe.toFixed(2)}$\n\n¡Muchas gracias por tu preferencia! ✨`;
+
+            navigator.clipboard.writeText(textoACopiar).then(() => {
+                mostrarToast("¡Resumen de cuenta copiado!");
+            }).catch(err => console.error("Error al copiar: ", err));
+        }
+
+        function copiarInfo(nombre, ref, bs, efectivo) {
+            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}$\n🇻🇪 Pago en Bs: ${bs.toFixed(2)} Bs\n💰 Efectivo (Promo -10%): ${efectivo.toFixed(2)}$`;
+            navigator.clipboard.writeText(textoACopiar).then(() => {
+                mostrarToast("¡Texto copiado para WhatsApp!");
+            }).catch(err => console.error("Error al copiar: ", err));
+        }
+
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.innerText = mensaje;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        // Ejecutar las funciones automáticamente
+        const regexCheck = new RegExp(/\b\d+,\d+\b/); 
+        obtenerTasaMonitorEuro();
+        renderizarVentas();
+    </script>
+</body>
+</html>
