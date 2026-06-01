@@ -461,14 +461,15 @@
             const totalBs = totalRef * tasaTrabajo;
             const totalEfe = totalRef * 0.90;
 
-           const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Pago en Bs:* ${bs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}`;
+      const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Pago en Bs:* ${bs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}`;
 
         navigator.clipboard.writeText(textoACopiar).then(() => {
             mostrarToast("Resumen de cuenta copiado!");
         }).catch(err => console.error("Error al copiar: ", err));
     }
+}
 
-       function copiarInfo(nombre, ref, bs, efectivo) {
+function copiarInfo(nombre, ref, bs, efectivo) {
     const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 Descuento del 10% (Efectivo/Binance/Zinli): ${efectivo.toFixed(2)}`;
     navigator.clipboard.writeText(textoACopiar).then(() => {
         mostrarToast("Texto copiado para WhatsApp!");
