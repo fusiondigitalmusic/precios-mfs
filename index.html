@@ -97,7 +97,7 @@
                 </tr>
             </thead>
             <tbody id="lista-ventas">
-                </tbody>
+            </tbody>
         </table>
     </div>
 
@@ -105,7 +105,7 @@
         <input type="text" id="buscador-calc" class="search-box" placeholder="Filtrar para la cuenta..." oninput="renderizarCalculadora()">
         
         <div id="lista-calculadora">
-            </div>
+        </div>
 
         <div class="barra-totales">
             <div class="fila-total" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">
@@ -145,7 +145,7 @@
 
         <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: #AAA;">Productos en el Menú</h3>
         <div id="lista-inventario">
-            </div>
+        </div>
     </div>
 
     <nav class="nav-inferior">
@@ -170,39 +170,31 @@
         // --- SCRAPING DIRECTO AUTOMÁTICO DE LA PÁGINA SOLICITADA ---
         async function obtenerTasaMonitorEuro() {
             const urlObjetivo = 'https://www.monitordedivisavenezuela.com/';
-            // Usamos un proxy público estable para traer el HTML de la página sin que rebote por seguridad
             const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlObjetivo);
 
             try {
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error();
                 const data = await response.json();
-                
-                // Procesamos el documento como texto plano para buscar las etiquetas del Euro
                 const htmlTexto = data.contents;
                 
-                // Buscamos el contenedor específico donde la página guarda la tasa del Euro
                 const stringBuscado = 'Euro BCV';
                 const posicionEuro = htmlTexto.indexOf(stringBuscado);
 
                 if (posicionEuro !== -1) {
-                    // Recortamos un pedazo del HTML alrededor del texto para extraer el número decimal
                     const fragmento = htmlTexto.substring(posicionEuro, posicionEuro + 300);
-                    const regexNumero = /\b\d+,\d+\b/; // Busca un patrón de números tipo "645,67"
                     const coincidencia = fragmento.match(regexCheck);
                     
                     if (coincidencia) {
                         let valorLimpio = coincidencia[0].replace(',', '.');
                         document.getElementById('bcv-valor').innerText = `Bs. ${parseFloat(valorLimpio).toFixed(2)}`;
                     } else {
-                        // Intentar otra búsqueda por patrones comunes en su código
                         extraerPorPatronAlterno(fragmento);
                     }
                 } else {
                     document.getElementById('bcv-valor').innerText = "Bs. 645.67";
                 }
             } catch (error) {
-                // Fallback silencioso en caso de caída de internet o bloqueo de IP
                 document.getElementById('bcv-valor').innerText = "Bs. 645.67";
             }
             const fecha = new Date();
@@ -210,8 +202,7 @@
         }
 
         function extraerPorPatronAlterno(texto) {
-            // Si el formato cambia ligeramente en el código de la web objetivo, este limpia las etiquetas HTML
-            const numeros = texto.replace(/[^0-9,]/g, ' ');
+            const numeros = text.replace(/[^0-9,]/g, ' ');
             const listaNumeros = numeros.split(' ').filter(n => n.includes(','));
             if(listaNumeros.length > 0) {
                 let valor = listaNumeros[0].replace(',', '.');
@@ -330,7 +321,7 @@
                     <div class="item-inventario">
                         <div>
                             <strong>${p.nombre}</strong><br>
-                            <span style="color: #4A90E2; font-size: 0.9rem;">Ref: ${p.ref.toFixed(2)}$</span>
+                            <span style="color: #4A90E2; font-size: 0.9rem;">Ref: ${p.ref.toFixed(2)}</span>
                         </div>
                         <div class="acciones-inventario">
                             <button class="btn btn-warning" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="prepararEdicion(${p.id})">✏️</button>
@@ -358,9 +349,9 @@
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${p.nombre}</strong></td>
-                        <td>${p.ref.toFixed(2)}$</td>
+                        <td>${p.ref.toFixed(2)}</td>
                         <td style="color: #2ECC71; font-weight: bold;">${precioBs.toFixed(2)}</td>
-                        <td style="color: #F1C40F;">${precioEfectivo.toFixed(2)}$</td>
+                        <td style="color: #F1C40F;">${precioEfectivo.toFixed(2)}</td>
                         <td>
                             <button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs}, ${precioEfectivo})">Copiar</button>
                         </td>
@@ -387,7 +378,7 @@
                     <div class="item-inventario">
                         <div>
                             <strong>${p.nombre}</strong><br>
-                            <span style="color: #AAA; font-size: 0.85rem;">${p.ref.toFixed(2)}$ | ${(p.ref * tasaTrabajo).toFixed(2)} Bs</span>
+                            <span style="color: #AAA; font-size: 0.85rem;">Ref: ${p.ref.toFixed(2)} | ${(p.ref * tasaTrabajo).toFixed(2)} Bs</span>
                         </div>
                         <div class="calc-controles">
                             <button class="btn-calc" onclick="modificarCantidad(${p.id}, -1)">-</button>
@@ -428,9 +419,9 @@
             const totalBs = totalRef * tasaTrabajo;
             const totalEfe = totalRef * 0.90;
 
-            document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}$`;
+            document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}`;
             document.getElementById('total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
-            document.getElementById('total-efe').innerText = `${totalEfe.toFixed(2)}$`;
+            document.getElementById('total-efe').innerText = `${totalEfe.toFixed(2)}`;
         }
 
         function limpiarCalculadora() {
@@ -449,7 +440,7 @@
                     const cant = cuentaActiva[id];
                     const subtotal = producto.ref * cant;
                     totalRef += subtotal;
-                    lineasPedido += `▪️ ${cant}x ${producto.nombre} (${subtotal.toFixed(2)}$)\n`;
+                    lineasPedido += `▪️ ${cant}x ${producto.nombre} (${subtotal.toFixed(2)})\n`;
                 }
             }
 
@@ -461,20 +452,19 @@
             const totalBs = totalRef * tasaTrabajo;
             const totalEfe = totalRef * 0.90;
 
-      const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Pago en Bs:* ${bs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}`;
+            const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}\n\n¡Muchas gracias por tu preferencia! ✨`;
 
-        navigator.clipboard.writeText(textoACopiar).then(() => {
-            mostrarToast("Resumen de cuenta copiado!");
-        }).catch(err => console.error("Error al copiar: ", err));
-    }
-}
+            navigator.clipboard.writeText(textoACopiar).then(() => {
+                mostrarToast("Resumen de cuenta copiado!");
+            }).catch(err => console.error("Error al copiar: ", err));
+        }
 
-function copiarInfo(nombre, ref, bs, efectivo) {
-    const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 Descuento del 10% (Efectivo/Binance/Zinli): ${efectivo.toFixed(2)}`;
-    navigator.clipboard.writeText(textoACopiar).then(() => {
-        mostrarToast("Texto copiado para WhatsApp!");
-    }).catch(err => console.error("Error al copiar: ", err));
-}
+        function copiarInfo(nombre, ref, bs, efectivo) {
+            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 Descuento del 10% (Efectivo/Binance/Zinli): ${efectivo.toFixed(2)}`;
+            navigator.clipboard.writeText(textoACopiar).then(() => {
+                mostrarToast("Texto copiado para WhatsApp!");
+            }).catch(err => console.error("Error al copiar: ", err));
+        }
 
         function mostrarToast(mensaje) {
             const toast = document.getElementById('toast');
