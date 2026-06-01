@@ -452,7 +452,12 @@
             const totalBs = totalRef * tasaTrabajo;
             const totalEfe = totalRef * 0.90;
 
-            const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- TOTALES METODOS DE PAGO ---\n\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}\n\n¡Muchas gracias por tu preferencia! ✨`;
+            // --- CONFIGURA AQUÍ TUS DATOS DE PAGO MÓVIL REALES ---
+            const banco = "BANCO DE VENEZUELA (0102)";
+            const telefono = "04241273260";
+            const cedula = "20638528";
+
+            const textoACopiar = `🛒 *RESUMEN DE TU PEDIDO*\n\n${lineasPedido}\n--- METODOS DE PAGO ---\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento del 10% (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}\n\n${banco}\n${telefono}\n${cedula}\n\n📌 *Nota importante:* Activamos la orden con la confirmación del pago.\n¡Gracias por preferirnos! ✨`;
 
             navigator.clipboard.writeText(textoACopiar).then(() => {
                 mostrarToast("Resumen de cuenta copiado!");
