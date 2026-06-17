@@ -40,28 +40,38 @@
         .tabla-productos th { background: #252525; color: #AAA; font-weight: 500; }
         .tabla-productos tr:nth-child(even) { background: #242424; }
         
-        /* Modificación e Items Calculadora */
+        /* Items Inventario y Calculadora */
         .item-inventario { background: #2A2A2A; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .acciones-inventario { display: flex; gap: 5px; }
         
-        /* Controles de cantidad en Calculadora */
+        /* Controles de cantidad */
         .calc-controles { display: flex; align-items: center; gap: 10px; }
         .btn-calc { background: #444; color: white; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .btn-calc.add { background: #4A90E2; }
         .cant-item { font-size: 1.1rem; font-weight: bold; min-width: 20px; text-align: center; }
 
-        /* Barra Fija de Totales en Calculadora */
+        /* Entrada de días moto directa */
+        .input-moto-directo { width: 50px; background: #222; border: 1px solid #555; color: #F1C40F; text-align: center; border-radius: 6px; padding: 4px; font-size: 1.1rem; font-weight: bold; }
+
+        /* Tarjeta de Configuración MFS-RE */
+        .card-aliado-config { background: #2C3E50; border: 1px solid #34495E; padding: 12px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .input-paralelo { width: 80px; background: #222; border: 1px solid #F39C12; color: #FFF; text-align: center; border-radius: 6px; padding: 5px; font-size: 1rem; font-weight: bold; }
+
+        /* Barra Fija de Totales */
         .barra-totales { background: #222; border: 2px solid #4A90E2; padding: 15px; border-radius: 12px; margin-top: 20px; position: sticky; bottom: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
         .fila-total { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; }
         
-        /* Menú Inferior Fijo */
+        /* Menú Inferior Fijo de 4 Botones */
         .nav-inferior { position: fixed; bottom: 0; left: 0; right: 0; background: #2A2A2A; display: flex; border-top: 1px solid #333; height: 60px; z-index: 100; }
-        .nav-btn { flex: 1; background: none; border: none; color: #888; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .nav-btn { flex: 1; background: none; border: none; color: #888; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
         .nav-btn.activo { color: #4A90E2; font-weight: bold; }
         .nav-btn span { font-size: 1.1rem; margin-bottom: 2px; }
         
         /* Toast de notificación */
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #2ECC71; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 1000; }
+        
+        /* Aviso de lista vacía */
+        .aviso-vacio { text-align: center; padding: 25px; color: #888; font-style: italic; background: #252525; border-radius: 8px; border: 1px dashed #444; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -72,7 +82,7 @@
         <h1>PRECIOS MFS</h1>
         <div class="tasas-container">
             <div class="tasa-bcv">
-                <span style="color: #AAA;">Euro Oficial (Monitor)</span><br>
+                <span style="color: #AAA;">Euro (Investing.com)</span><br>
                 <strong id="bcv-fecha">--/--/----</strong><br>
                 <span id="bcv-valor" style="color: #2ECC71; font-weight: bold;">Cargando...</span>
             </div>
@@ -83,9 +93,9 @@
         </div>
     </header>
 
+    <!-- PANTALLA 1: MENU REGULAR -->
     <div id="pantalla-ventas" class="pantalla activa">
         <input type="text" id="buscador" class="search-box" placeholder="Buscar producto en el menú..." oninput="renderizarVentas()">
-        
         <table class="tabla-productos">
             <thead>
                 <tr>
@@ -96,41 +106,64 @@
                     <th>Acción</th>
                 </tr>
             </thead>
-            <tbody id="lista-ventas">
-            </tbody>
+            <tbody id="lista-ventas"></tbody>
         </table>
     </div>
 
+    <!-- PANTALLA 2: CALCULADORA CLIENTE -->
     <div id="pantalla-calculadora" class="pantalla">
         <input type="text" id="buscador-calc" class="search-box" placeholder="Filtrar para la cuenta..." oninput="renderizarCalculadora()">
-        
-        <div id="lista-calculadora">
-        </div>
-
+        <div id="lista-calculadora"></div>
         <div class="barra-totales">
             <div class="fila-total" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">
                 <strong>Resumen del Pedido</strong>
                 <span style="color: #4A90E2; font-weight: bold; cursor: pointer;" onclick="limpiarCalculadora()">🗑️ Limpiar</span>
             </div>
-            <div class="fila-total">
-                <span>Total Ref ($):</span>
-                <strong id="total-ref">0.00$</strong>
-            </div>
-            <div class="fila-total" style="color: #2ECC71;">
-                <span>Total en Bolívares (Bs):</span>
-                <strong id="total-bs">0.00 Bs</strong>
-            </div>
-            <div class="fila-total" style="color: #F1C40F; margin-bottom: 12px;">
-                <span>Total Efectivo (-10%):</span>
-                <strong id="total-efe">0.00$</strong>
-            </div>
+            <div class="fila-total"><span>Total Ref ($):</span><strong id="total-ref">0.00$</strong></div>
+            <div class="fila-total" style="color: #2ECC71;"><span>Total en Bolívares (Bs):</span><strong id="total-bs">0.00 Bs</strong></div>
+            <div class="fila-total" style="color: #F1C40F; margin-bottom: 12px;"><span>Total Efectivo (-10%):</span><strong id="total-efe">0.00$</strong></div>
             <button class="btn btn-copy" style="width: 100%; padding: 10px;" onclick="copiarCuenta()">Copiar Resumen Cuenta</button>
         </div>
     </div>
 
+    <!-- PANTALLA 3: CUENTA MFS-RE -->
+    <div id="pantalla-aliado" class="pantalla">
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <!-- Control Moto -->
+            <div class="card-aliado-config" style="flex: 1; margin-bottom: 0;">
+                <div><strong style="color: #FFF; font-size: 0.9rem;">🛵 Días Moto</strong></div>
+                <div class="calc-controles" style="gap: 5px;">
+                    <button class="btn-calc" style="background: #E74C3C; width: 26px; height: 26px; font-size: 0.9rem;" onclick="modificarDiasMoto(-1)">-</button>
+                    <input type="number" id="contador-moto" class="input-moto-directo" value="0" min="0" oninput="cambiarDiasMotoDirecto(this.value)">
+                    <button class="btn-calc add" style="background: #2ECC71; width: 26px; height: 26px; font-size: 0.9rem;" onclick="modificarDiasMoto(1)">+</button>
+                </div>
+            </div>
+            <!-- Control Tasa BNB -->
+            <div class="card-aliado-config" style="flex: 1; margin-bottom: 0;">
+                <div><strong style="color: #FFF; font-size: 0.9rem;">🏪 Tasa BNB $</strong></div>
+                <input type="number" id="input-tasa-bnb" class="input-paralelo" value="45.50" step="0.10" oninput="actualizarTasaBNB(this.value)">
+            </div>
+        </div>
+
+        <input type="text" id="buscador-aliado" class="search-box" style="margin-top:12px;" placeholder="Filtrar productos de MFS-RE..." oninput="renderizarAliado()">
+        <div id="lista-aliado"></div>
+        
+        <div class="barra-totales" style="border-color: #F39C12;">
+            <div class="fila-total" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">
+                <strong style="color: #F39C12;">Órdenes Acumuladas MFS-RE</strong>
+                <span style="color: #D9534F; font-weight: bold; cursor: pointer;" onclick="limpiarCuentaAliado()">🗑️ Reiniciar Deuda</span>
+            </div>
+            <div class="fila-total"><span>Total Ref ($):</span><strong id="aliado-total-ref">0.00$</strong></div>
+            <div class="fila-total" style="color: #2ECC71;"><span>Total en Bs (Tasa Euro):</span><strong id="aliado-total-bs">0.00 Bs</strong></div>
+            <div class="fila-total" style="color: #3498DB; font-weight: bold; margin-bottom: 12px;"><span>Pago en $ físico o digital:</span><strong id="aliado-total-bnb">0.00 $</strong></div>
+            <button class="btn btn-copy" style="width: 100%; padding: 10px; background: #F39C12;" onclick="copiarCuentaAliado()">Copiar Estado de Cuenta</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: AJUSTES -->
     <div id="pantalla-inventario" class="pantalla">
-        <div class="card" style="background: #2A2A2A; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-            <h3 id="titulo-formulario" style="margin-bottom: 10px; font-size: 1.1rem;">Agregar al Menú</h3>
+        <div class="card" style="background: #2A2A2A; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #444;">
+            <h3 id="titulo-formulario" style="margin-bottom: 10px; font-size: 1.1rem; color: #4A90E2;">Agregar a Mi Menú Regular</h3>
             <input type="hidden" id="inv-id">
             <div class="form-group">
                 <label>Nombre del Producto / Combo</label>
@@ -140,76 +173,67 @@
                 <label>Precio de Referencia ($)</label>
                 <input type="number" id="inv-precio" step="0.01" placeholder="Ej: 5.00">
             </div>
-            <button class="btn" id="btn-guardar" onclick="guardarProducto()">Guardar en Menú</button>
+            <button class="btn" id="btn-guardar" onclick="guardarProducto()">Guardar en Mi Menú</button>
         </div>
 
-        <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: #AAA;">Productos en el Menú</h3>
-        <div id="lista-inventario">
-        </div>
+        <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: #AAA;">Listado de Mi Menú Regular</h3>
+        <div id="lista-inventario-completo"></div>
     </div>
 
+    <!-- MENU INFERIOR FIJO -->
     <nav class="nav-inferior">
-        <button id="btn-nav-ventas" class="nav-btn activo" onclick="cambiarPantalla('ventas')">
-            <span>📋</span>REF MENU
-        </button>
-        <button id="btn-nav-calculadora" class="nav-btn" onclick="cambiarPantalla('calculadora')">
-            <span>🧮</span>CALCULADORA
-        </button>
-        <button id="btn-nav-inventario" class="nav-btn" onclick="cambiarPantalla('inventario')">
-            <span>⚙️</span>MODIFICACION MENU
-        </button>
+        <button id="btn-nav-ventas" class="nav-btn activo" onclick="cambiarPantalla('ventas')"><span>📋</span>REF MENU</button>
+        <button id="btn-nav-calculadora" class="nav-btn" onclick="cambiarPantalla('calculadora')"><span>🧮</span>CALCULADORA</button>
+        <button id="btn-nav-aliado" class="nav-btn" onclick="cambiarPantalla('aliado')"><span>🤝</span>MFS-RE</button>
+        <button id="btn-nav-inventario" class="nav-btn" onclick="cambiarPantalla('inventario')"><span>⚙️</span>MODIFICACION MENU</button>
     </nav>
 
     <script>
+        // Menú Aliado FIJO en el código
+        const menuAliadoPredeterminado = [
+            { id: 101, nombre: "PAPAS FRITAS", ref: 2.00 },
+            { id: 102, nombre: "TRADICIONAL", ref: 5.00 },
+            { id: 103, nombre: "CARNIVORA", ref: 6.00 },
+            { id: 104, nombre: "CHICKEN", ref: 6.00 },
+            { id: 105, nombre: "AMERICANA", ref: 6.50 },
+            { id: 106, nombre: "CHEESE", ref: 7.00 },
+            { id: 107, nombre: "CASA", ref: 7.50 },
+            { id: 108, nombre: "MIXTA", ref: 8.50 }
+        ];
+
         let productos = JSON.parse(localStorage.getItem('mis_productos')) || [];
+        let productosAliado = menuAliadoPredeterminado;
+        
         let tasaTrabajo = parseFloat(localStorage.getItem('tasa_trabajo')) || 45.00;
+        let tasaBNB = parseFloat(localStorage.getItem('tasa_bnb')) || 45.50;
+        let diasMoto = parseInt(localStorage.getItem('dias_moto')) || 0;
+        
         let cuentaActiva = {};
+        let cuentaAliadoAcumulada = JSON.parse(localStorage.getItem('cuenta_aliado_acumulada')) || {};
 
-        document.getElementById('input-tasa-manual').value = tasaTrabajo;
+        try {
+            document.getElementById('input-tasa-manual').value = tasaTrabajo;
+            document.getElementById('input-tasa-bnb').value = tasaBNB;
+            document.getElementById('contador-moto').value = diasMoto;
+        } catch(e) {}
 
-        // --- SCRAPING DIRECTO AUTOMÁTICO DE LA PÁGINA SOLICITADA ---
-        async function obtenerTasaMonitorEuro() {
-            const urlObjetivo = 'https://www.monitordedivisavenezuela.com/';
-            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlObjetivo);
-
+        async function obtenerTasaInvestingEuro() {
             try {
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                const htmlTexto = data.contents;
+                const respuesta = await fetch('https://open.er-api.com/v6/latest/EUR');
+                if (!respuesta.ok) throw new Error();
+                const datos = await respuesta.json();
                 
-                const stringBuscado = 'Euro BCV';
-                const posicionEuro = htmlTexto.indexOf(stringBuscado);
-
-                if (posicionEuro !== -1) {
-                    const fragmento = htmlTexto.substring(posicionEuro, posicionEuro + 300);
-                    const coincidencia = fragmento.match(regexCheck);
-                    
-                    if (coincidencia) {
-                        let valorLimpio = coincidencia[0].replace(',', '.');
-                        document.getElementById('bcv-valor').innerText = `Bs. ${parseFloat(valorLimpio).toFixed(2)}`;
-                    } else {
-                        extraerPorPatronAlterno(fragmento);
-                    }
+                if(datos && datos.rates && datos.rates.VES) {
+                    let tasaRealVES = datos.rates.VES;
+                    document.getElementById('bcv-valor').innerText = `Bs. ${tasaRealVES.toFixed(2)}`;
                 } else {
-                    document.getElementById('bcv-valor').innerText = "Bs. 645.67";
+                    document.getElementById('bcv-valor').innerText = "Bs. 49.35";
                 }
             } catch (error) {
-                document.getElementById('bcv-valor').innerText = "Bs. 645.67";
+                document.getElementById('bcv-valor').innerText = "Bs. 49.35";
             }
             const fecha = new Date();
             document.getElementById('bcv-fecha').innerText = `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`;
-        }
-
-        function extraerPorPatronAlterno(texto) {
-            const numeros = text.replace(/[^0-9,]/g, ' ');
-            const listaNumeros = numeros.split(' ').filter(n => n.includes(','));
-            if(listaNumeros.length > 0) {
-                let valor = listaNumeros[0].replace(',', '.');
-                document.getElementById('bcv-valor').innerText = `Bs. ${parseFloat(valor).toFixed(2)}`;
-            } else {
-                document.getElementById('bcv-valor').innerText = "Bs. 645.67";
-            }
         }
 
         function cambiarPantalla(pantalla) {
@@ -224,11 +248,15 @@
                 document.getElementById('pantalla-calculadora').classList.add('activa');
                 document.getElementById('btn-nav-calculadora').classList.add('activo');
                 renderizarCalculadora();
+            } else if(pantalla === 'aliado') {
+                document.getElementById('pantalla-aliado').classList.add('activa');
+                document.getElementById('btn-nav-aliado').classList.add('activo');
+                renderizarAliado();
             } else {
                 document.getElementById('pantalla-inventario').classList.add('activa');
                 document.getElementById('btn-nav-inventario').classList.add('activo');
                 resetearFormulario();
-                renderizarInventory();
+                renderizarInventoryCompleto();
             }
         }
 
@@ -239,10 +267,36 @@
                 localStorage.setItem('tasa_trabajo', tasaTrabajo);
                 renderizarVentas();
                 calcularTotalesCuenta();
+                calcularTotalesAliado();
             }
         }
 
-        // --- GESTIÓN DE PRODUCTOS ---
+        function actualizarTasaBNB(valor) {
+            let nuevaTasa = parseFloat(valor);
+            if (!isNaN(nuevaTasa) && nuevaTasa > 0) {
+                tasaBNB = nuevaTasa;
+                localStorage.setItem('tasa_bnb', tasaBNB);
+                calcularTotalesAliado();
+            }
+        }
+
+        function modificarDiasMoto(cambio) {
+            diasMoto += cambio;
+            if(diasMoto < 0) diasMoto = 0;
+            localStorage.setItem('dias_moto', diasMoto);
+            document.getElementById('contador-moto').value = diasMoto;
+            calcularTotalesAliado();
+        }
+
+        function cambiarDiasMotoDirecto(valor) {
+            let entero = parseInt(valor);
+            if(!isNaN(entero) && entero >= 0) {
+                diasMoto = entero;
+                localStorage.setItem('dias_moto', diasMoto);
+                calcularTotalesAliado();
+            }
+        }
+
         function guardarProducto() {
             const idInput = document.getElementById('inv-id');
             const nombreInput = document.getElementById('inv-nombre');
@@ -258,21 +312,21 @@
             }
 
             if (id === "") {
-                const nuevoProducto = { id: Date.now(), nombre: nombre, ref: precio };
-                productos.push(nuevoProducto);
-                mostrarToast("¡Agregado al menú!");
+                const nuevo = { id: Date.now(), nombre: nombre, ref: precio };
+                productos.push(nuevo);
+                mostrarToast("¡Agregado con éxito!");
             } else {
                 const index = productos.findIndex(p => p.id == id);
                 if (index !== -1) {
                     productos[index].nombre = nombre;
                     productos[index].ref = precio;
-                    mostrarToast("¡Producto actualizado!");
+                    mostrarToast("¡Modificación guardada!");
                 }
                 resetearFormulario();
             }
 
             localStorage.setItem('mis_productos', JSON.stringify(productos));
-            renderizarInventory();
+            renderizarInventoryCompleto();
         }
 
         function prepararEdicion(id) {
@@ -281,54 +335,39 @@
                 document.getElementById('inv-id').value = producto.id;
                 document.getElementById('inv-nombre').value = producto.nombre;
                 document.getElementById('inv-precio').value = producto.ref;
-                document.getElementById('titulo-formulario').innerText = "Modificar Producto";
-                const btnGuardar = document.getElementById('btn-guardar');
-                btnGuardar.innerText = "Actualizar Cambios";
-                btnGuardar.classList.add('btn-update');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
-        function resetearFormulario() {
-            document.getElementById('inv-id').value = "";
-            document.getElementById('inv-nombre').value = "";
-            document.getElementById('inv-precio').value = "";
-            document.getElementById('titulo-formulario').innerText = "Agregar al Menú";
-            const btnGuardar = document.getElementById('btn-guardar');
-            btnGuardar.innerText = "Guardar en Menú";
-            btnGuardar.classList.remove('btn-update');
-        }
-
         function eliminarProducto(id) {
-            if(confirm("¿Seguro que quieres quitar este producto del menú?")) {
+            if(confirm("¿Seguro que deseas eliminar este producto de tu menú?")) {
                 productos = productos.filter(p => p.id !== id);
                 delete cuentaActiva[id];
                 localStorage.setItem('mis_productos', JSON.stringify(productos));
-                resetearFormulario();
-                renderizarInventory();
+                renderizarInventoryCompleto();
             }
         }
 
-        function renderizarInventory() {
-            const contenedor = document.getElementById('lista-inventario');
+        function resetearFormulario() {
+            document.getElementById('inv-id').value = ""; document.getElementById('inv-nombre').value = ""; document.getElementById('inv-precio').value = "";
+        }
+
+        function renderizarInventoryCompleto() {
+            const contenedor = document.getElementById('lista-inventario-completo');
             contenedor.innerHTML = "";
+            
             if(productos.length === 0) {
-                contenedor.innerHTML = `<p style="color: #666; text-align: center; margin-top: 20px;">El menú está vacío.</p>`;
-                return;
+                contenedor.innerHTML += `<div class="aviso-vacio">No hay productos en tu menú regular. Usa el formulario de arriba para añadir.</div>`;
             }
             productos.forEach(p => {
                 contenedor.innerHTML += `
                     <div class="item-inventario">
-                        <div>
-                            <strong>${p.nombre}</strong><br>
-                            <span style="color: #4A90E2; font-size: 0.9rem;">Ref: ${p.ref.toFixed(2)}</span>
-                        </div>
+                        <div><strong>${p.nombre}</strong><br><span style="color:#4A90E2;">Ref: ${p.ref.toFixed(2)}</span></div>
                         <div class="acciones-inventario">
-                            <button class="btn btn-warning" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="prepararEdicion(${p.id})">✏️</button>
-                            <button class="btn btn-danger" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="eliminarProducto(${p.id})">Quitar</button>
+                            <button class="btn btn-warning" style="width:auto; padding:6px 12px; font-size:0.8rem;" onclick="prepararEdicion(${p.id})">✏️</button>
+                            <button class="btn btn-danger" style="width:auto; padding:6px 12px; font-size:0.8rem;" onclick="eliminarProducto(${p.id})">X</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
@@ -336,14 +375,14 @@
             const tbody = document.getElementById('lista-ventas');
             const busqueda = document.getElementById('buscador').value.toLowerCase();
             tbody.innerHTML = "";
-
-            const productosFiltrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
-            if(productosFiltrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#666; padding: 20px;">No se encontraron productos.</td></tr>`;
+            const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
+            
+            if(filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#888;">No se encontraron productos en Mi Menú.</td></tr>`;
                 return;
             }
-
-            productosFiltrados.forEach(p => {
+            
+            filtrados.forEach(p => {
                 const precioBs = p.ref * tasaTrabajo;
                 const precioEfectivo = p.ref * 0.90; 
                 tbody.innerHTML += `
@@ -352,11 +391,8 @@
                         <td>${p.ref.toFixed(2)}</td>
                         <td style="color: #2ECC71; font-weight: bold;">${precioBs.toFixed(2)}</td>
                         <td style="color: #F1C40F;">${precioEfectivo.toFixed(2)}</td>
-                        <td>
-                            <button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs}, ${precioEfectivo})">Copiar</button>
-                        </td>
-                    </tr>
-                `;
+                        <td><button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs}, ${precioEfectivo})">Copiar</button></td>
+                    </tr>`;
             });
         }
 
@@ -364,123 +400,151 @@
             const contenedor = document.getElementById('lista-calculadora');
             const busqueda = document.getElementById('buscador-calc').value.toLowerCase();
             contenedor.innerHTML = "";
-
-            const productosFiltrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
-
-            if(productosFiltrados.length === 0) {
-                contenedor.innerHTML = `<p style="color: #666; text-align: center; padding: 20px;">No hay productos guardados.</p>`;
+            const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
+            
+            if(filtrados.length === 0) {
+                contenedor.innerHTML = `<div class="aviso-vacio">No hay productos en tu menú regular para armar cuentas.</div>`;
                 return;
             }
 
-            productosFiltrados.forEach(p => {
+            filtrados.forEach(p => {
                 const cantidad = cuentaActiva[p.id] || 0;
                 contenedor.innerHTML += `
                     <div class="item-inventario">
-                        <div>
-                            <strong>${p.nombre}</strong><br>
-                            <span style="color: #AAA; font-size: 0.85rem;">Ref: ${p.ref.toFixed(2)} | ${(p.ref * tasaTrabajo).toFixed(2)} Bs</span>
-                        </div>
+                        <div><strong>${p.nombre}</strong><br><span style="color:#AAA; font-size:0.85rem;">Ref: ${p.ref.toFixed(2)}</span></div>
                         <div class="calc-controles">
-                            <button class="btn-calc" onclick="modificarCantidad(${p.id}, -1)">-</button>
-                            <span class="cant-item" id="cant-${p.id}">${cantidad}</span>
-                            <button class="btn-calc add" onclick="modificarCantidad(${p.id}, 1)">+</button>
+                            <button class="btn-calc" onclick="modificarCantidadRegular(${p.id}, -1)">-</button>
+                            <span class="cant-item" id="cant-reg-${p.id}">${cantidad}</span>
+                            <button class="btn-calc add" onclick="modificarCantidadRegular(${p.id}, 1)">+</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             calcularTotalesCuenta();
         }
 
-        function modificarCantidad(id, cambio) {
-            let cantActual = cuentaActiva[id] || 0;
-            cantActual += cambio;
-            
-            if (cantActual <= 0) {
-                delete cuentaActiva[id];
-            } else {
-                cuentaActiva[id] = cantActual;
-            }
-            
-            const elementoCant = document.getElementById(`cant-${id}`);
-            if(elementoCant) elementoCant.innerText = cuentaActiva[id] || 0;
-            
+        function modificarCantidadRegular(id, cambio) {
+            let cant = cuentaActiva[id] || 0;
+            cant += cambio;
+            if(cant <= 0) delete cuentaActiva[id]; else cuentaActiva[id] = cant;
+            const el = document.getElementById(`cant-reg-${id}`); if(el) el.innerText = cuentaActiva[id] || 0;
             calcularTotalesCuenta();
         }
 
         function calcularTotalesCuenta() {
             let totalRef = 0;
-            for (const id in cuentaActiva) {
-                const producto = productos.find(p => p.id == id);
-                if (producto) {
-                    totalRef += producto.ref * cuentaActiva[id];
-                }
+            for(const id in cuentaActiva) {
+                const p = productos.find(prod => prod.prod_id || prod.id == id);
+                if(p) totalRef += p.ref * cuentaActiva[id];
             }
-
-            const totalBs = totalRef * tasaTrabajo;
-            const totalEfe = totalRef * 0.90;
-
-            document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}`;
-            document.getElementById('total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
-            document.getElementById('total-efe').innerText = `${totalEfe.toFixed(2)}`;
+            document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}$`;
+            document.getElementById('total-bs').innerText = `${(totalRef * tasaTrabajo).toFixed(2)} Bs`;
+            document.getElementById('total-efe').innerText = `${(totalRef * 0.90).toFixed(2)}$`;
         }
 
-        function limpiarCalculadora() {
-            cuentaActiva = {};
-            renderizarCalculadora();
-            mostrarToast("Cuenta reiniciada");
-        }
+        function limpiarCalculadora() { cuentaActiva = {}; renderizarCalculadora(); }
 
         function copiarCuenta() {
-            let lineasPedido = "";
-            let totalRef = 0;
-
-            for (const id in cuentaActiva) {
-                const producto = productos.find(p => p.id == id);
-                if (producto) {
-                    const cant = cuentaActiva[id];
-                    const subtotal = producto.ref * cant;
-                    totalRef += subtotal;
-                    lineasPedido += `▪️ ${cant}x ${producto.nombre} (${subtotal.toFixed(2)})\n`;
+            let lineasPedido = ""; let totalRef = 0;
+            for(const id in cuentaActiva) {
+                const p = productos.find(prod => prod.id == id);
+                if(p) { 
+                    lineasPedido += `▪️ ${cuentaActiva[id]}x ${p.nombre}\n`; 
+                    totalRef += p.ref * cuentaActiva[id]; 
                 }
             }
-
-            if (totalRef === 0) {
-                alert("Agrega al menos un producto para copiar la cuenta.");
-                return;
-            }
-
+            if(totalRef === 0) return alert("Agrega al menos un producto para copiar la cuenta.");
+            
             const totalBs = totalRef * tasaTrabajo;
             const totalEfe = totalRef * 0.90;
 
-            // --- CONFIGURA AQUÍ TUS DATOS DE PAGO MÓVIL REALES ---
             const banco = "BANCO DE VENEZUELA (0102)";
             const telefono = "04241273260";
             const cedula = "20638528";
 
-            const textoACopiar = `🛒 *RESUMEN DE SU PEDIDO*\n\n${lineasPedido}\n--- METODOS DE PAGO ---\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento pagos en (Efectivo/Binance/Zinli):* ${totalEfe.toFixed(2)}\n\n${banco}\n${telefono}\n${cedula}\n\n📌 *Nota importante:* Activamos la orden con la confirmación del pago.\n¡Gracias por preferirnos! ✨`;
+            const textoACopiar = `🛒 *RESUMEN DE SU PEDIDO*\n\n${lineasPedido}\n--- METODOS DE PAGO ---\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento Pago en $ físico o digital:* ${totalEfe.toFixed(2)}\n\n${banco}\n${telefono}\n${cedula}\n\n📌 *Nota importante:* Activamos la orden con la confirmación del pago.\n¡Gracias por preferirnos! ✨`;
+            navigator.clipboard.writeText(textoACopiar).then(() => mostrarToast("¡Resumen de cuenta copiado!"));
+        }
 
-            navigator.clipboard.writeText(textoACopiar).then(() => {
-                mostrarToast("Resumen de cuenta copiado!");
-            }).catch(err => console.error("Error al copiar: ", err));
+        // --- PESTAÑA MFS-RE ---
+        function renderizarAliado() {
+            const contenedor = document.getElementById('lista-aliado');
+            const busqueda = document.getElementById('buscador-aliado').value.toLowerCase();
+            contenedor.innerHTML = "";
+            
+            const filtrados = productosAliado.filter(p => p.nombre.toLowerCase().includes(busqueda));
+            
+            filtrados.forEach(p => {
+                const cantidad = cuentaAliadoAcumulada[p.id] || 0;
+                contenedor.innerHTML += `
+                    <div class="item-inventario" style="border-left:3px solid #F39F12;">
+                        <div><strong>${p.nombre}</strong><br><span style="color:#AAA; font-size:0.85rem;">Costo Aliado: ${p.ref.toFixed(2)} Ref</span></div>
+                        <div class="calc-controles">
+                            <button class="btn-calc" style="background:#444;" onclick="modificarCantidadAliado(${p.id}, -1)">-</button>
+                            <span class="cant-item" id="cant-aliado-${p.id}">${cantidad}</span>
+                            <button class="btn-calc add" style="background:#F39C12;" onclick="modificarCantidadAliado(${p.id}, 1)">+</button>
+                        </div>
+                    </div>`;
+            });
+            calcularTotalesAliado();
+        }
+
+        function modificarCantidadAliado(id, cambio) {
+            let cant = cuentaAliadoAcumulada[id] || 0;
+            cant += cambio;
+            if(cant <= 0) delete cuentaAliadoAcumulada[id]; else cuentaAliadoAcumulada[id] = cant;
+            
+            localStorage.setItem('cuenta_aliado_acumulada', JSON.stringify(cuentaAliadoAcumulada));
+            const el = document.getElementById(`cant-aliado-${id}`); if(el) el.innerText = cuentaAliadoAcumulada[id] || 0;
+            calcularTotalesAliado();
+        }
+
+        function calcularTotalesAliado() {
+            let totalRef = 0;
+            for(const id in cuentaAliadoAcumulada) {
+                const p = productosAliado.find(prod => prod.id == id);
+                if(p) totalRef += p.ref * cuentaAliadoAcumulada[id];
+            }
+            const totalBs = totalRef * tasaTrabajo;
+            const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
+
+            document.getElementById('aliado-total-ref').innerText = `${totalRef.toFixed(2)}$`;
+            document.getElementById('aliado-total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
+            document.getElementById('aliado-total-bnb').innerText = `${totalUSDBNB.toFixed(2)} $`;
+        }
+
+        function limpiarCuentaAliado() {
+            if(confirm("¿Seguro que deseas reiniciar la cuenta acumulada de MFS-RE?")) {
+                cuentaAliadoAcumulada = {};
+                localStorage.setItem('cuenta_aliado_acumulada', JSON.stringify(cuentaAliadoAcumulada));
+                renderizarAliado();
+            }
+        }
+
+        function copiarCuentaAliado() {
+            let lineas = ""; let totalRef = 0;
+            for(const id in cuentaAliadoAcumulada) {
+                const p = productosAliado.find(prod => prod.id == id);
+                if(p) { lineas += `▪️ ${cuentaAliadoAcumulada[id]}x ${p.nombre} (${(p.ref * cuentaAliadoAcumulada[id]).toFixed(2)})\n`; totalRef += p.ref * cuentaAliadoAcumulada[id]; }
+            }
+            
+            const totalBs = totalRef * tasaTrabajo;
+            const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
+
+            const texto = `📊 *CORTE DE CUENTA MFS-RE*\n\nOrdenes acumuladas hasta la fecha:\n\n${lineas || "No hay órdenes registradas.\n"}\n--- TOTAL ACUMULADO ---\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Total en Bs:* ${totalBs.toFixed(2)}\n💱 *Pago en $ físico o digital:* ${totalUSDBNB.toFixed(2)} $\n\n--- CONTROL DE MOTO ---\n🛵 *Días disponibles:* ${diasMoto} días`;
+            navigator.clipboard.writeText(texto).then(() => mostrarToast("¡Cuenta MFS-RE copiada!"));
         }
 
         function copiarInfo(nombre, ref, bs, efectivo) {
-            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 Descuento del 10% (Efectivo/Binance/Zinli): ${efectivo.toFixed(2)}`;
-            navigator.clipboard.writeText(textoACopiar).then(() => {
-                mostrarToast("Texto copiado para WhatsApp!");
-            }).catch(err => console.error("Error al copiar: ", err));
+            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 *Descuento Pago en $ físico o digital:* ${efectivo.toFixed(2)}`;
+            navigator.clipboard.writeText(textoACopiar).then(() => mostrarToast("¡Texto copiado para WhatsApp!"));
         }
 
         function mostrarToast(mensaje) {
-            const toast = document.getElementById('toast');
-            toast.innerText = mensaje;
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+            const toast = document.getElementById('toast'); toast.innerText = mensaje;
+            toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
 
-        // Ejecutar las funciones automáticamente
-        const regexCheck = new RegExp(/\b\d+,\d+\b/); 
-        obtenerTasaMonitorEuro();
+        obtenerTasaInvestingEuro();
         renderizarVentas();
     </script>
 </body>
