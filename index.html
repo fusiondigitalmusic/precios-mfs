@@ -50,10 +50,6 @@
         .btn-calc.add { background: #4A90E2; }
         .cant-item { font-size: 1.1rem; font-weight: bold; min-width: 20px; text-align: center; }
 
-        /* Tarjeta de Configuración MFS-RE */
-        .card-aliado-config { background: #2C3E50; border: 1px solid #34495E; padding: 12px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .input-paralelo { width: 80px; background: #222; border: 1px solid #F39C12; color: #FFF; text-align: center; border-radius: 6px; padding: 5px; font-size: 1rem; font-weight: bold; }
-
         /* Barra Fija de Totales */
         .barra-totales { background: #222; border: 2px solid #4A90E2; padding: 15px; border-radius: 12px; margin-top: 20px; position: sticky; bottom: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
         .fila-total { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; }
@@ -123,15 +119,7 @@
 
     <!-- PANTALLA 3: CUENTA MFS-RE -->
     <div id="pantalla-aliado" class="pantalla">
-        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-            <!-- Control Tasa BNB -->
-            <div class="card-aliado-config" style="flex: 1; margin-bottom: 0;">
-                <div><strong style="color: #FFF; font-size: 0.9rem;">🏪 Tasa BNB $</strong></div>
-                <input type="number" id="input-tasa-bnb" class="input-paralelo" value="45.50" step="0.10" oninput="actualizarTasaBNB(this.value)">
-            </div>
-        </div>
-
-        <input type="text" id="buscador-aliado" class="search-box" style="margin-top:12px;" placeholder="Filtrar productos de MFS-RE..." oninput="renderizarAliado()">
+        <input type="text" id="buscador-aliado" class="search-box" placeholder="Filtrar productos de MFS-RE..." oninput="renderizarAliado()">
         <div id="lista-aliado"></div>
         
         <div class="barra-totales" style="border-color: #F39C12;">
@@ -139,7 +127,7 @@
                 <strong style="color: #F39C12;">Órdenes Acumuladas MFS-RE</strong>
                 <span style="color: #D9534F; font-weight: bold; cursor: pointer;" onclick="limpiarCuentaAliado()">🗑️ Reiniciar Deuda</span>
             </div>
-            <div class="fila-total" style="color: #3498DB; font-weight: bold; margin-bottom: 12px;"><span>Total Acumulado ($):</span><strong id="aliado-total-bnb">0.00 $</strong></div>
+            <div class="fila-total" style="color: #3498DB; font-weight: bold; margin-bottom: 12px;"><span>Total Acumulado ($):</span><strong id="aliado-total-ref">0.00 $</strong></div>
             <button class="btn btn-copy" style="width: 100%; padding: 10px; background: #F39C12;" onclick="copiarCuentaAliado()">Copiar Estado de Cuenta</button>
         </div>
     </div>
@@ -189,14 +177,12 @@
         let productosAliado = menuAliadoPredeterminado;
         
         let tasaTrabajo = parseFloat(localStorage.getItem('tasa_trabajo')) || 45.00;
-        let tasaBNB = parseFloat(localStorage.getItem('tasa_bnb')) || 45.50;
         
         let cuentaActiva = {};
         let cuentaAliadoAcumulada = JSON.parse(localStorage.getItem('cuenta_aliado_acumulada')) || {};
 
         try {
             document.getElementById('input-tasa-manual').value = tasaTrabajo;
-            document.getElementById('input-tasa-bnb').value = tasaBNB;
         } catch(e) {}
 
         async function obtenerTasaInvestingEuro() {
@@ -249,15 +235,6 @@
                 localStorage.setItem('tasa_trabajo', tasaTrabajo);
                 renderizarVentas();
                 calcularTotalesCuenta();
-                calcularTotalesAliado();
-            }
-        }
-
-        function actualizarTasaBNB(valor) {
-            let nuevaTasa = parseFloat(valor);
-            if (!isNaN(nuevaTasa) && nuevaTasa > 0) {
-                tasaBNB = nuevaTasa;
-                localStorage.setItem('tasa_bnb', tasaBNB);
                 calcularTotalesAliado();
             }
         }
@@ -465,10 +442,7 @@
                 const p = productosAliado.find(prod => prod.id == id);
                 if(p) totalRef += p.ref * cuentaAliadoAcumulada[id];
             }
-            const totalBs = totalRef * tasaTrabajo;
-            const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
-
-            document.getElementById('aliado-total-bnb').innerText = `${totalUSDBNB.toFixed(2)} $`;
+            document.getElementById('aliado-total-ref').innerText = `${totalRef.toFixed(2)} $`;
         }
 
         function limpiarCuentaAliado() {
@@ -480,16 +454,16 @@
         }
 
         function copiarCuentaAliado() {
-            let totalRef = 0;
+            let lineas = ""; let totalRef = 0;
             for(const id in cuentaAliadoAcumulada) {
                 const p = productosAliado.find(prod => prod.id == id);
-                if(p) { totalRef += p.ref * cuentaAliadoAcumulada[id]; }
+                if(p) { 
+                    lineas += `▪️ ${cuentaAliadoAcumulada[id]}x ${p.nombre} (${(p.ref * cuentaAliadoAcumulada[id]).toFixed(2)})\n`; 
+                    totalRef += p.ref * cuentaAliadoAcumulada[id]; 
+                }
             }
             
-            const totalBs = totalRef * tasaTrabajo;
-            const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
-
-            const texto = `📊 *CORTE DE CUENTA MFS-RE*\n\n--- TOTAL ACUMULADO ---\n💱 *Total Acumulado ($):* ${totalUSDBNB.toFixed(2)} $`;
+            const texto = `📊 *CORTE DE CUENTA MFS-RE*\n\nOrdenes acumuladas hasta la fecha:\n\n${lineas || "No hay órdenes registradas.\n"}\n--- TOTAL ACUMULADO ---\n💵 *Ref:* ${totalRef.toFixed(2)}`;
             navigator.clipboard.writeText(texto).then(() => mostrarToast("¡Cuenta MFS-RE copiada!"));
         }
 
