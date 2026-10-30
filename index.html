@@ -50,9 +50,6 @@
         .btn-calc.add { background: #4A90E2; }
         .cant-item { font-size: 1.1rem; font-weight: bold; min-width: 20px; text-align: center; }
 
-        /* Entrada de días moto directa */
-        .input-moto-directo { width: 50px; background: #222; border: 1px solid #555; color: #F1C40F; text-align: center; border-radius: 6px; padding: 4px; font-size: 1.1rem; font-weight: bold; }
-
         /* Tarjeta de Configuración MFS-RE */
         .card-aliado-config { background: #2C3E50; border: 1px solid #34495E; padding: 12px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .input-paralelo { width: 80px; background: #222; border: 1px solid #F39C12; color: #FFF; text-align: center; border-radius: 6px; padding: 5px; font-size: 1rem; font-weight: bold; }
@@ -102,7 +99,6 @@
                     <th>Producto</th>
                     <th>Ref.</th>
                     <th>Bs.</th>
-                    <th>Efe.(-10%)</th>
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -120,8 +116,7 @@
                 <span style="color: #4A90E2; font-weight: bold; cursor: pointer;" onclick="limpiarCalculadora()">🗑️ Limpiar</span>
             </div>
             <div class="fila-total"><span>Total Ref ($):</span><strong id="total-ref">0.00$</strong></div>
-            <div class="fila-total" style="color: #2ECC71;"><span>Total en Bolívares (Bs):</span><strong id="total-bs">0.00 Bs</strong></div>
-            <div class="fila-total" style="color: #F1C40F; margin-bottom: 12px;"><span>Total Efectivo (-10%):</span><strong id="total-efe">0.00$</strong></div>
+            <div class="fila-total" style="color: #2ECC71; margin-bottom: 12px;"><span>Total en Bolívares (Bs):</span><strong id="total-bs">0.00 Bs</strong></div>
             <button class="btn btn-copy" style="width: 100%; padding: 10px;" onclick="copiarCuenta()">Copiar Resumen Cuenta</button>
         </div>
     </div>
@@ -129,15 +124,6 @@
     <!-- PANTALLA 3: CUENTA MFS-RE -->
     <div id="pantalla-aliado" class="pantalla">
         <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-            <!-- Control Moto -->
-            <div class="card-aliado-config" style="flex: 1; margin-bottom: 0;">
-                <div><strong style="color: #FFF; font-size: 0.9rem;">🛵 Días Moto</strong></div>
-                <div class="calc-controles" style="gap: 5px;">
-                    <button class="btn-calc" style="background: #E74C3C; width: 26px; height: 26px; font-size: 0.9rem;" onclick="modificarDiasMoto(-1)">-</button>
-                    <input type="number" id="contador-moto" class="input-moto-directo" value="0" min="0" oninput="cambiarDiasMotoDirecto(this.value)">
-                    <button class="btn-calc add" style="background: #2ECC71; width: 26px; height: 26px; font-size: 0.9rem;" onclick="modificarDiasMoto(1)">+</button>
-                </div>
-            </div>
             <!-- Control Tasa BNB -->
             <div class="card-aliado-config" style="flex: 1; margin-bottom: 0;">
                 <div><strong style="color: #FFF; font-size: 0.9rem;">🏪 Tasa BNB $</strong></div>
@@ -153,9 +139,7 @@
                 <strong style="color: #F39C12;">Órdenes Acumuladas MFS-RE</strong>
                 <span style="color: #D9534F; font-weight: bold; cursor: pointer;" onclick="limpiarCuentaAliado()">🗑️ Reiniciar Deuda</span>
             </div>
-            <div class="fila-total"><span>Total Ref ($):</span><strong id="aliado-total-ref">0.00$</strong></div>
-            <div class="fila-total" style="color: #2ECC71;"><span>Total en Bs (Tasa Euro):</span><strong id="aliado-total-bs">0.00 Bs</strong></div>
-            <div class="fila-total" style="color: #3498DB; font-weight: bold; margin-bottom: 12px;"><span>Pago en $ físico o digital:</span><strong id="aliado-total-bnb">0.00 $</strong></div>
+            <div class="fila-total" style="color: #3498DB; font-weight: bold; margin-bottom: 12px;"><span>Total Acumulado ($):</span><strong id="aliado-total-bnb">0.00 $</strong></div>
             <button class="btn btn-copy" style="width: 100%; padding: 10px; background: #F39C12;" onclick="copiarCuentaAliado()">Copiar Estado de Cuenta</button>
         </div>
     </div>
@@ -206,7 +190,6 @@
         
         let tasaTrabajo = parseFloat(localStorage.getItem('tasa_trabajo')) || 45.00;
         let tasaBNB = parseFloat(localStorage.getItem('tasa_bnb')) || 45.50;
-        let diasMoto = parseInt(localStorage.getItem('dias_moto')) || 0;
         
         let cuentaActiva = {};
         let cuentaAliadoAcumulada = JSON.parse(localStorage.getItem('cuenta_aliado_acumulada')) || {};
@@ -214,7 +197,6 @@
         try {
             document.getElementById('input-tasa-manual').value = tasaTrabajo;
             document.getElementById('input-tasa-bnb').value = tasaBNB;
-            document.getElementById('contador-moto').value = diasMoto;
         } catch(e) {}
 
         async function obtenerTasaInvestingEuro() {
@@ -276,23 +258,6 @@
             if (!isNaN(nuevaTasa) && nuevaTasa > 0) {
                 tasaBNB = nuevaTasa;
                 localStorage.setItem('tasa_bnb', tasaBNB);
-                calcularTotalesAliado();
-            }
-        }
-
-        function modificarDiasMoto(cambio) {
-            diasMoto += cambio;
-            if(diasMoto < 0) diasMoto = 0;
-            localStorage.setItem('dias_moto', diasMoto);
-            document.getElementById('contador-moto').value = diasMoto;
-            calcularTotalesAliado();
-        }
-
-        function cambiarDiasMotoDirecto(valor) {
-            let entero = parseInt(valor);
-            if(!isNaN(entero) && entero >= 0) {
-                diasMoto = entero;
-                localStorage.setItem('dias_moto', diasMoto);
                 calcularTotalesAliado();
             }
         }
@@ -378,20 +343,18 @@
             const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(busqueda));
             
             if(filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#888;">No se encontraron productos en Mi Menú.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">No se encontraron productos en Mi Menú.</td></tr>`;
                 return;
             }
             
             filtrados.forEach(p => {
                 const precioBs = p.ref * tasaTrabajo;
-                const precioEfectivo = p.ref * 0.90; 
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${p.nombre}</strong></td>
                         <td>${p.ref.toFixed(2)}</td>
                         <td style="color: #2ECC71; font-weight: bold;">${precioBs.toFixed(2)}</td>
-                        <td style="color: #F1C40F;">${precioEfectivo.toFixed(2)}</td>
-                        <td><button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs}, ${precioEfectivo})">Copiar</button></td>
+                        <td><button class="btn-copy" onclick="copiarInfo('${p.nombre}', ${p.ref}, ${precioBs})">Copiar</button></td>
                     </tr>`;
             });
         }
@@ -438,7 +401,6 @@
             }
             document.getElementById('total-ref').innerText = `${totalRef.toFixed(2)}$`;
             document.getElementById('total-bs').innerText = `${(totalRef * tasaTrabajo).toFixed(2)} Bs`;
-            document.getElementById('total-efe').innerText = `${(totalRef * 0.90).toFixed(2)}$`;
         }
 
         function limpiarCalculadora() { cuentaActiva = {}; renderizarCalculadora(); }
@@ -455,13 +417,12 @@
             if(totalRef === 0) return alert("Agrega al menos un producto para copiar la cuenta.");
             
             const totalBs = totalRef * tasaTrabajo;
-            const totalEfe = totalRef * 0.90;
 
             const banco = "BANCO DE VENEZUELA (0102)";
             const telefono = "04241273260";
             const cedula = "20638528";
 
-            const textoACopiar = `🛒 *RESUMEN DE SU PEDIDO*\n\n${lineasPedido}\n--- METODOS DE PAGO ---\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n🎁 *Descuento Pago en $ físico o digital:* ${totalEfe.toFixed(2)}\n\n${banco}\n${telefono}\n${cedula}\n\n📌 *Nota importante:* Activamos la orden con la confirmación del pago.\n¡Gracias por preferirnos! ✨`;
+            const textoACopiar = `🛒 *RESUMEN DE SU PEDIDO*\n\n${lineasPedido}\n--- METODOS DE PAGO ---\n🇻🇪 *Pago en Bs:* ${totalBs.toFixed(2)}\n💵 *Costo en $ (Ref):* ${totalRef.toFixed(2)}$\n\n${banco}\n${telefono}\n${cedula}\n\n📌 *Nota importante:* Activamos la orden con la confirmación del pago.\n¡Gracias por preferirnos! ✨`;
             navigator.clipboard.writeText(textoACopiar).then(() => mostrarToast("¡Resumen de cuenta copiado!"));
         }
 
@@ -507,8 +468,6 @@
             const totalBs = totalRef * tasaTrabajo;
             const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
 
-            document.getElementById('aliado-total-ref').innerText = `${totalRef.toFixed(2)}$`;
-            document.getElementById('aliado-total-bs').innerText = `${totalBs.toFixed(2)} Bs`;
             document.getElementById('aliado-total-bnb').innerText = `${totalUSDBNB.toFixed(2)} $`;
         }
 
@@ -521,21 +480,21 @@
         }
 
         function copiarCuentaAliado() {
-            let lineas = ""; let totalRef = 0;
+            let totalRef = 0;
             for(const id in cuentaAliadoAcumulada) {
                 const p = productosAliado.find(prod => prod.id == id);
-                if(p) { lineas += `▪️ ${cuentaAliadoAcumulada[id]}x ${p.nombre} (${(p.ref * cuentaAliadoAcumulada[id]).toFixed(2)})\n`; totalRef += p.ref * cuentaAliadoAcumulada[id]; }
+                if(p) { totalRef += p.ref * cuentaAliadoAcumulada[id]; }
             }
             
             const totalBs = totalRef * tasaTrabajo;
             const totalUSDBNB = tasaBNB > 0 ? (totalBs / tasaBNB) : 0;
 
-            const texto = `📊 *CORTE DE CUENTA MFS-RE*\n\nOrdenes acumuladas hasta la fecha:\n\n${lineas || "No hay órdenes registradas.\n"}\n--- TOTAL ACUMULADO ---\n💵 *Ref:* ${totalRef.toFixed(2)}\n🇻🇪 *Total en Bs:* ${totalBs.toFixed(2)}\n💱 *Pago en $ físico o digital:* ${totalUSDBNB.toFixed(2)} $\n\n--- CONTROL DE MOTO ---\n🛵 *Días disponibles:* ${diasMoto} días`;
+            const texto = `📊 *CORTE DE CUENTA MFS-RE*\n\n--- TOTAL ACUMULADO ---\n💱 *Total Acumulado ($):* ${totalUSDBNB.toFixed(2)} $`;
             navigator.clipboard.writeText(texto).then(() => mostrarToast("¡Cuenta MFS-RE copiada!"));
         }
 
-        function copiarInfo(nombre, ref, bs, efectivo) {
-            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}\n🎁 *Descuento Pago en $ físico o digital:* ${efectivo.toFixed(2)}`;
+        function copiarInfo(nombre, ref, bs) {
+            const textoACopiar = `📝 *${nombre}*\n💵 Ref: ${ref.toFixed(2)}\n🇻🇪 Pago en Bs: ${bs.toFixed(2)}`;
             navigator.clipboard.writeText(textoACopiar).then(() => mostrarToast("¡Texto copiado para WhatsApp!"));
         }
 
